@@ -1,0 +1,288 @@
+
+###################################
+# Experiment Parameters and setup #
+###################################
+seed: 1234
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/TTS_test32_30_nhead4/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+max_grad_norm: 1.0
+progress_samples: False
+progress_sample_path: !ref <output_folder>/samples
+progress_samples_min_run: 10
+progress_samples_interval: 10
+progress_batch_sample_size: 1
+test_batch_sample_size: 4 #saves this for every batch
+
+
+#################################
+# Data files and pre-processing #
+#################################
+data_folder: !ref LJSpeech-1.1
+train_annotation: !ref <data_folder>/train.json
+valid_annotation: !ref <data_folder>/valid.json
+test_annotation: !ref <data_folder>/small_test.json
+
+
+################################
+# Audio Parameters             #
+################################
+sample_rate: 22050
+hop_length: 256
+win_length: 1024
+n_mel_channels: 80
+n_fft: 1024
+mel_fmin: 0.0
+mel_fmax: 8000.0
+power: 1
+normalized: False
+min_max_energy_norm: True
+norm: "slaney"
+mel_scale: "slaney"
+dynamic_range_compression: True
+mel_normalized: False
+min_f0: 65  #(torchaudio pyin values)
+max_f0: 2093 #(torchaudio pyin values)
+
+
+################################
+# Optimization Hyperparameters #
+################################
+learning_rate: 0.0001
+weight_decay: 0.000001
+batch_size: 32
+num_workers_train: 0
+num_workers_valid: 0
+betas: [0.9, 0.98]
+stop_threshold: 0.5
+number_of_epochs: 30
+pos_weight: 5.0
+
+###################################
+# Stage related Parameters #
+###################################
+stage_one_epochs: 100
+lr_adam: 0.0001
+lr_sgd: 0.00003
+lexicon:
+    - AA
+    - AE
+    - AH
+    - AO
+    - AW
+    - AY
+    - B
+    - CH
+    - D
+    - DH
+    - EH
+    - ER
+    - EY
+    - F
+    - G
+    - HH
+    - IH
+    - IY
+    - JH
+    - K
+    - L
+    - M
+    - N
+    - NG
+    - OW
+    - OY
+    - P
+    - R
+    - S
+    - SH
+    - T
+    - TH
+    - UH
+    - UW
+    - V
+    - W
+    - Y
+    - Z
+    - ZH
+    - ' '
+
+n_symbols: 42 #fixed depending on symbols in the lexicon +1 for a dummy symbol used for padding
+padding_idx: 0
+
+# Define model architecture
+d_model: 512
+nhead: 4
+num_encoder_layers: 6
+num_decoder_layers: 6
+dim_feedforward: 2048
+dropout: 0.2
+blank_index: 0 # This special token is for padding
+bos_index: 1
+eos_index: 2
+stop_weight: 0.45
+
+
+###################################
+# Model and Components #
+###################################
+enc_pre_net: !new:models.EncoderPrenet
+dec_pre_net: !new:models.DecoderPrenet
+
+
+encoder_emb: !new:torch.nn.Embedding
+    num_embeddings: 128
+    embedding_dim: !ref <d_model>
+    padding_idx: !ref <blank_index>
+
+pos_emb_enc: !new:models.ScaledPositionalEncoding
+    d_model: !ref <d_model>
+
+
+pos_emb_dec: !new:models.ScaledPositionalEncoding
+    d_model: !ref <d_model>
+    
+Seq2SeqTransformer: !new:torch.nn.Transformer
+    d_model: !ref <d_model>
+    nhead: !ref <nhead>
+    num_encoder_layers: !ref <num_encoder_layers>
+    num_decoder_layers: !ref <num_decoder_layers>
+    dim_feedforward: !ref <dim_feedforward>
+    dropout: !ref <dropout>
+    batch_first: True
+
+postnet: !new:models.PostNet
+    mel_channels: !ref <n_mel_channels>
+    postnet_channels: 512
+    kernel_size: 5
+    postnet_layers: 5
+
+mel_lin: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <d_model>
+    n_neurons: !ref <n_mel_channels>
+
+stop_lin: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <d_model>
+    n_neurons: 1
+
+#ckpt_enable: True
+#ckpt_interval_minutes: 0.01
+# Masks
+lookahead_mask: !name:speechbrain.lobes.models.transformer.Transformer.get_lookahead_mask
+padding_mask: !name:speechbrain.lobes.models.transformer.Transformer.get_key_padding_mask
+
+mel_spec_feats: !name:speechbrain.lobes.models.FastSpeech2.mel_spectogram
+    sample_rate: !ref <sample_rate>
+    hop_length: !ref <hop_length>
+    win_length: !ref <win_length>
+    n_fft: !ref <n_fft>
+    n_mels: !ref <n_mel_channels>
+    f_min: !ref <mel_fmin>
+    f_max: !ref <mel_fmax>
+    power: !ref <power>
+    normalized: !ref <normalized>
+    min_max_energy_norm: !ref <min_max_energy_norm>
+    norm: !ref <norm>
+    mel_scale: !ref <mel_scale>
+    compression: !ref <dynamic_range_compression>
+
+modules:
+    enc_pre_net: !ref <enc_pre_net>
+    encoder_emb: !ref <encoder_emb>
+    pos_emb_enc: !ref <pos_emb_enc>
+
+    dec_pre_net: !ref <dec_pre_net>
+    #decoder_emb: !ref <decoder_emb>
+    pos_emb_dec: !ref <pos_emb_dec>
+
+    Seq2SeqTransformer: !ref <Seq2SeqTransformer>
+    postnet: !ref <postnet>
+    mel_lin: !ref <mel_lin>
+    stop_lin: !ref <stop_lin>
+
+model: !new:torch.nn.ModuleList
+    - [!ref <enc_pre_net>, !ref <encoder_emb>, !ref <pos_emb_enc>, !ref <dec_pre_net>, !ref <pos_emb_dec>, !ref <Seq2SeqTransformer>, !ref <postnet>, !ref <mel_lin>, !ref <stop_lin>]
+
+
+###################################
+# Error stats and Data Loaders #
+###################################
+
+mel_error_stats: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.mse_loss
+        reduction: batch
+
+stop_error_stats: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.bce_loss
+        reduction: batch
+
+# The train logger writes training statistics to a file, as well as stdout.
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+    drop_last: False  #True #False
+    num_workers: !ref <num_workers_train>
+    shuffle: True
+    collate_fn: !name:models.dynamic_batch_collate
+
+valid_dataloader_opts:
+    batch_size: !ref <batch_size>
+    num_workers: !ref <num_workers_valid>
+    shuffle: False
+    collate_fn: !name:models.dynamic_batch_collate
+
+test_dataloader_opts:
+    batch_size: !ref <batch_size>
+    collate_fn: !name:models.dynamic_batch_collate
+
+
+# The first object passed to the Brain class is this "Epoch Counter"
+# which is saved by the Checkpointer so that training can be resumed
+# if it gets interrupted at any point.
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+stop_loss: !name:speechbrain.nnet.losses.bce_loss
+
+mel_loss: !name:speechbrain.nnet.losses.mse_loss
+
+log_softmax: !new:torch.nn.LogSoftmax
+    dim: -1
+
+noam_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
+    lr_initial: !ref <lr_adam>
+    n_warmup_steps: 4000
+
+# This optimizer will be constructed by the Brain class after all parameters
+# are moved to the correct device. Then it will be added to the checkpointer.
+opt_class: !name:torch.optim.Adam
+    lr: !ref <lr_adam>
+    weight_decay: !ref <weight_decay>
+    betas: !ref <betas>
+    eps: 0.000000001
+
+SGD: !name:torch.optim.SGD
+    lr: !ref <lr_sgd>
+    momentum: 0.99
+    nesterov: True
+
+# This object is used for saving the state of training both so that it
+# can be resumed if it gets interrupted, and also so that the best checkpoint
+# can be later loaded for evaluation or inference.
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        optimizer: !ref <opt_class>
+        lr_annealing: !ref <noam_annealing>
+        counter: !ref <epoch_counter>
+
+
+progress_sample_logger: !new:speechbrain.utils.train_logger.ProgressSampleLogger
+    output_path: !ref <progress_sample_path>
+    batch_sample_size: !ref <progress_batch_sample_size>
+    formats:
+        raw_batch: raw
