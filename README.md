@@ -1,11 +1,3 @@
-# Text-to-Speech (TTS) with Transformer trained on LJSpeech
-
-This repository provides all the necessary tools for Text-to-Speech (TTS)  with SpeechBrain using a [Transformer](https://arxiv.org/pdf/1809.08895.pdf) pretrained on [LJSpeech](https://keithito.com/LJ-Speech-Dataset/).
-
-The pre-trained model takes in input a short text and produces a spectrogram in output. One can get the final waveform by applying a vocoder (e.g., HiFIGAN) on top of the generated spectrogram.
-
-# For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)
-
 ---
 language: "en"
 tags:
@@ -21,6 +13,13 @@ metrics:
 - mos
 pipeline_tag: text-to-speech
 ---
+
+# Text-to-Speech (TTS) with Transformer trained on LJSpeech
+
+This repository provides all the necessary tools for Text-to-Speech (TTS)  with SpeechBrain using a [Transformer](https://arxiv.org/pdf/1809.08895.pdf) pretrained on [LJSpeech](https://keithito.com/LJ-Speech-Dataset/).
+
+The pre-trained model takes in input a short text and produces a spectrogram in output. One can get the final waveform by applying a vocoder (e.g., HiFIGAN) on top of the generated spectrogram.
+
 
 ## Install SpeechBrain
 
@@ -74,6 +73,7 @@ To perform inference on the GPU, add  `run_opts={"device":"cuda"}`  when calling
 
 Note: For Training the model please visit this TTS_Training_Inference notebook in the repository
 
+# For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)
 
 ### Limitations
 The SpeechBrain team does not provide any warranty on the performance achieved by this model when used on other datasets.
