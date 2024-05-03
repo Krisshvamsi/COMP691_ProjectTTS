@@ -74,7 +74,7 @@ To perform inference on the GPU, add  `run_opts={"device":"cuda"}`  when calling
 
 Note: For Training the model please visit this TTS_Training_Inference notebook
 
-For the inference API, please visit the huggingface interface at (https://huggingface.co/Krisshvamsi/TTS)
+For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)
 
 ### Limitations
 The SpeechBrain team does not provide any warranty on the performance achieved by this model when used on other datasets.
