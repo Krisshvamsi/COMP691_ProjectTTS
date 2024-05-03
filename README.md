@@ -20,6 +20,8 @@ This repository provides all the necessary tools for Text-to-Speech (TTS)  with 
 
 The pre-trained model takes in input a short text and produces a spectrogram in output. One can get the final waveform by applying a vocoder (e.g., HiFIGAN) on top of the generated spectrogram.
 
+For detailed analysis and understanding of the project please head on to [Project_Report](https://github.com/Krisshvamsi/COMP691_ProjectTTS/blob/main/Project_Report.ipynb)
+
 
 ## Install SpeechBrain
 
