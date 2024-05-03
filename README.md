@@ -4,7 +4,7 @@ This repository provides all the necessary tools for Text-to-Speech (TTS)  with 
 
 The pre-trained model takes in input a short text and produces a spectrogram in output. One can get the final waveform by applying a vocoder (e.g., HiFIGAN) on top of the generated spectrogram.
 
-##For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)##
+##For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)
 
 ---
 language: "en"
