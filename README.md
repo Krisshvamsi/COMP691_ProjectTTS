@@ -71,7 +71,7 @@ If you want to generate multiple sentences in one-shot, pass the sentences as it
 ### Inference on GPU
 To perform inference on the GPU, add  `run_opts={"device":"cuda"}`  when calling the `from_hparams` method.
 
-Note: For Training the model please visit this TTS_Training_Inference notebook in the repository
+Note: For Training the model please visit this [TTS_Training_Inference](https://github.com/Krisshvamsi/COMP691_ProjectTTS/blob/main/TTS_Training_Inference.ipynb) notebook in the repository
 
 ## For the inference API, please visit the huggingface interface at [Krisshvamsi/TTS](https://huggingface.co/Krisshvamsi/TTS)
 
