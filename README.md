@@ -23,11 +23,6 @@ The pre-trained model takes in input a short text and produces a spectrogram in 
 For detailed analysis and understanding of the project please head on to [Project_Report](https://github.com/Krisshvamsi/COMP691_ProjectTTS/blob/main/Project_Report.ipynb)
 
 
-## Install SpeechBrain
-
-```
-pip install speechbrain
-```
 ### Perform Text-to-Speech (TTS) - Running Inference
 To run model inference pull the interface directory as shown in the cell below
 
